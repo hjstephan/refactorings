@@ -2,6 +2,26 @@
 const vscode = require('vscode');
 const JavaParser = require('java-parser');
 
+// Compatibility helper: some versions of `java-parser` export a parser class (constructor),
+// others export a plain API with a `parse` function. This helper normalizes that so
+// calling code can get a CST from Java source via `parseJavaToCst(code)`.
+function parseJavaToCst(code) {
+    try {
+        if (typeof JavaParser === 'function') {
+            const parser = new JavaParser();
+            if (typeof parser.parse === 'function') return parser.parse(code);
+        }
+
+        if (JavaParser && typeof JavaParser.parse === 'function') return JavaParser.parse(code);
+
+        if (JavaParser && JavaParser.default && typeof JavaParser.default.parse === 'function') return JavaParser.default.parse(code);
+    } catch (e) {
+        throw e;
+    }
+
+    throw new Error('Unsupported java-parser API');
+}
+
 let decorationsEnabled = true;
 let activeEditor;
 let timeout;
@@ -24,14 +44,14 @@ function activate(context) {
     // Register commands
     const analyzeCommand = vscode.commands.registerCommand('java-refactoring-analyzer.analyze', function () {
         const editor = vscode.window.activeTextEditor;
-        
+
         if (!editor) {
             vscode.window.showErrorMessage('No active editor found');
             return;
         }
 
         const document = editor.document;
-        
+
         if (document.languageId !== 'java') {
             vscode.window.showErrorMessage('This extension only works with Java files');
             return;
@@ -52,7 +72,7 @@ function activate(context) {
 
     const toggleDecorationsCommand = vscode.commands.registerCommand('java-refactoring-analyzer.toggleDecorations', function () {
         decorationsEnabled = !decorationsEnabled;
-        
+
         if (decorationsEnabled) {
             vscode.window.showInformationMessage('Real-time decorations enabled');
             if (activeEditor) {
@@ -164,7 +184,7 @@ function updateDecorations() {
 
     try {
         const decorations = analyzeForDecorations(code, methodLocThreshold, classMethodThreshold);
-        
+
         // Apply decorations
         activeEditor.setDecorations(methodDecorationType, decorations.methodGood);
         activeEditor.setDecorations(methodWarningDecorationType, decorations.methodWarning);
@@ -187,9 +207,8 @@ function clearAllDecorations() {
 }
 
 function analyzeForDecorations(code, methodLocThreshold, classMethodThreshold) {
-    const parser = new JavaParser();
-    const cst = parser.parse(code);
-    
+    const cst = parseJavaToCst(code);
+
     const decorations = {
         methodGood: [],
         methodWarning: [],
@@ -222,7 +241,7 @@ function analyzeForDecorations(code, methodLocThreshold, classMethodThreshold) {
         // Create class decoration
         const classLine = getLineFromOffset(code, identifier.location.startOffset);
         const classEndPos = getEndPositionOfLine(code, classLine);
-        
+
         const classDecoration = {
             range: new vscode.Range(classLine, classEndPos, classLine, classEndPos),
             renderOptions: {
@@ -247,7 +266,7 @@ function analyzeForDecorations(code, methodLocThreshold, classMethodThreshold) {
             const location = getNodeLocation(method, code);
             const methodBody = findNode(method, 'block');
             let bodyLOC = location.loc;
-            
+
             if (methodBody) {
                 const bodyLocation = getNodeLocation(methodBody, code);
                 bodyLOC = bodyLocation.loc;
@@ -292,9 +311,8 @@ function getEndPositionOfLine(code, lineNumber) {
 }
 
 function analyzeJavaCode(code, fileName) {
-    const parser = new JavaParser();
-    const cst = parser.parse(code);
-    
+    const cst = parseJavaToCst(code);
+
     const metrics = {
         fileName: fileName,
         totalClasses: 0,
@@ -309,10 +327,10 @@ function analyzeJavaCode(code, fileName) {
     const lines = code.split('\n');
     metrics.totalLOC = lines.filter(line => {
         const trimmed = line.trim();
-        return trimmed.length > 0 && 
-               !trimmed.startsWith('//') && 
-               !trimmed.startsWith('/*') && 
-               !trimmed.startsWith('*');
+        return trimmed.length > 0 &&
+            !trimmed.startsWith('//') &&
+            !trimmed.startsWith('/*') &&
+            !trimmed.startsWith('*');
     }).length;
 
     analyzeCompilationUnit(cst, code, metrics);
@@ -352,12 +370,12 @@ function analyzeTypeDeclaration(typeDecl, code, metrics) {
     const className = identifier ? getNodeText(identifier, code) : 'Anonymous';
 
     const location = getNodeLocation(typeDecl, code);
-    
+
     const methodDeclarations = findNodes(typeDecl, 'methodDeclaration');
     const constructorDeclarations = findNodes(typeDecl, 'constructorDeclaration');
-    
+
     const allMethods = [...methodDeclarations, ...constructorDeclarations];
-    
+
     const classInfo = {
         name: className,
         loc: location.loc,
@@ -376,12 +394,12 @@ function analyzeTypeDeclaration(typeDecl, code, metrics) {
 function analyzeMethod(methodNode, code, metrics, className) {
     const identifier = findNode(methodNode, 'Identifier');
     const methodName = identifier ? getNodeText(identifier, code) : 'constructor';
-    
+
     const location = getNodeLocation(methodNode, code);
-    
+
     const methodBody = findNode(methodNode, 'block');
     let bodyLOC = location.loc;
-    
+
     if (methodBody) {
         const bodyLocation = getNodeLocation(methodBody, code);
         bodyLOC = bodyLocation.loc;
@@ -400,14 +418,14 @@ function analyzeMethod(methodNode, code, metrics, className) {
 
 function findNodes(node, type) {
     const results = [];
-    
+
     function traverse(n) {
         if (!n) return;
-        
+
         if (n.name === type) {
             results.push(n);
         }
-        
+
         if (n.children) {
             Object.values(n.children).forEach(child => {
                 if (Array.isArray(child)) {
@@ -418,7 +436,7 @@ function findNodes(node, type) {
             });
         }
     }
-    
+
     traverse(node);
     return results;
 }
@@ -430,10 +448,10 @@ function findNode(node, type) {
 
 function getNodeText(node, code) {
     if (!node || !node.location) return '';
-    
+
     const start = node.location.startOffset;
     const end = node.location.endOffset;
-    
+
     return code.substring(start, end + 1);
 }
 
@@ -441,19 +459,19 @@ function getNodeLocation(node, code) {
     if (!node || !node.location) {
         return { startLine: 0, endLine: 0, loc: 0 };
     }
-    
+
     const startOffset = node.location.startOffset;
     const endOffset = node.location.endOffset;
-    
+
     const textBefore = code.substring(0, startOffset);
     const textBetween = code.substring(startOffset, endOffset + 1);
-    
+
     const startLine = textBefore.split('\n').length;
     const lines = textBetween.split('\n');
     const endLine = startLine + lines.length - 1;
-    
+
     const loc = lines.filter(line => line.trim().length > 0).length;
-    
+
     return { startLine, endLine, loc };
 }
 
@@ -583,7 +601,7 @@ function generateHTML(metrics, fileName) {
         })
         .map(i => {
             let icon, bgColor;
-            switch(i.type) {
+            switch (i.type) {
                 case 'warning': icon = '⚠️'; bgColor = 'rgba(255, 165, 0, 0.15)'; break;
                 case 'info': icon = 'ℹ️'; bgColor = 'rgba(100, 181, 246, 0.15)'; break;
                 case 'success': icon = '✅'; bgColor = 'rgba(76, 201, 176, 0.15)'; break;
@@ -602,7 +620,7 @@ function generateHTML(metrics, fileName) {
     const avgLOC = parseFloat(metrics.avgLOCPerMethod);
     const methodScore = Math.max(0, 100 - (avgLOC * 3));
     const totalScore = ((classScore + methodScore) / 2).toFixed(0);
-    
+
     const scoreColor = totalScore > 70 ? '#4ec9b0' : totalScore > 40 ? '#dcdcaa' : '#f48771';
     const scoreText = totalScore > 70 ? 'Excellent' : totalScore > 40 ? 'Good' : 'Needs Improvement';
 

@@ -2,7 +2,7 @@
   "name": "java-refactoring-analyzer",
   "displayName": "Java Refactoring Analyzer",
   "description": "Analyzes Java code structure to maximize classes and minimize LOC/method with real-time decorations",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "publisher": "hjstephan",
   "author": {
     "name": "Stephan Epp"
@@ -19,7 +19,9 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Programming Languages"],
+  "categories": [
+    "Programming Languages"
+  ],
   "keywords": [
     "java",
     "refactoring",
@@ -28,7 +30,9 @@
     "linting"
   ],
   "readme": "README.md",
-  "activationEvents": ["onLanguage:java"],
+  "activationEvents": [
+    "onLanguage:java"
+  ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
@@ -72,6 +76,34 @@
   },
   "dependencies": {
     "java-parser": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/sinon": "^17.0.4",
+    "mocha": "^10.8.2",
+    "nyc": "^15.1.0",
+    "proxyquire": "^2.1.3",
+    "sinon": "^17.0.1"
+  },
+  "scripts": {
+    "test:unit": "mocha",
+    "test:coverage": "nyc mocha",
+    "test": "npm run test:unit"
+  },
+  "nyc": {
+    "reporter": [
+      "text",
+      "html",
+      "lcov"
+    ],
+    "exclude": [
+      "test/**",
+      "node_modules/**"
+    ],
+    "all": true,
+    "check-coverage": true,
+    "lines": 80,
+    "functions": 80,
+    "branches": 80
   }
 }
-

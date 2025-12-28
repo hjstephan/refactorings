@@ -6,7 +6,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # VS Code Extension specific
-*.vsix
+# *.vsix
 .vscode-test/
 .vscode-test-web/
 
