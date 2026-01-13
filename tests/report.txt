@@ -1,61 +1,54 @@
 
-> java-refactoring-analyzer@1.0.3 test:coverage
-> nyc mocha
+> java-refactoring-analyzer@2.0.0 test-coverage
+> nyc --reporter=lcov --reporter=text mocha --ui tdd tests/unit/**/*.test.js
 
 
 
-  Java Refactoring Analyzer Extension Tests
-    Extension Activation
-      ✔ should activate and register commands
-      ✔ should create decoration types on activation
-      ✔ should register editor change listeners
-    Analyze Command
-      ✔ should show error when no active editor
-      ✔ should show error when document is not Java
-      ✔ should analyze Java code and show metrics panel (78ms)
-      ✔ should handle parsing errors gracefully (256ms)
-    Toggle Decorations Command
-      ✔ should toggle decorations on
-    Decoration Updates
-      ✔ should update decorations when Java file is opened (724ms)
-      ✔ should update decorations on document change (705ms)
-      ✔ should not update decorations for non-Java files (704ms)
-    Code Analysis
-      ✔ should count classes correctly
-      ✔ should count methods correctly
-      ✔ should identify long methods (704ms)
-    Metrics Calculation
-      ✔ should calculate average LOC per method
-      ✔ should generate recommendations for long methods
-    Configuration
-      ✔ should respect methodLocThreshold setting (704ms)
-      ✔ should respect classMethodThreshold setting (703ms)
-    Edge Cases
-      ✔ should handle empty Java file
-      ✔ should handle interface declarations
-      ✔ should handle enum declarations
-      ✔ should handle constructor declarations
-    Deactivation
-      ✔ should clear decorations on deactivate
+  Decorations Unit Tests
+    ✔ toggleDecorations sollte den Status wechseln
+    ✔ setActiveEditor sollte den aktiven Editor setzen
+    ✔ createDecorationTypes sollte alle Typen initialisieren
+    ✔ updateDecorations Fehlerfall (Catch-Block Coverage)
+
+  Extension Entry Point
+    ✔ activate() sollte alle Commands registrieren
+    ✔ deactivate() sollte cleanup durchführen
+    ✔ analyzeJavaCode Command sollte funktionieren
+    ✔ toggleDecorations Command sollte funktionieren
+    ✔ activeTextEditor wechsel sollte Decorations aktualisieren
+    ✔ Dokument änderung sollte Decorations aktualisieren
+    ✔ Fehlerbehandlung bei fehlendem Editor
+    ✔ Fehlerbehandlung bei nicht-Java Datei
+    ✔ Context subscriptions sollten befüllt werden
+
+  Parser Unit Tests
+    ✔ analyzeJavaCode sollte korrekte Basis-Metriken liefern
+    ✔ generateRecommendations sollte alle Pfade abdecken
+    ✔ Deep analysis of CST nodes
+    ✔ Vollständige CST Analyse (Branch Coverage)
+    ✔ analyzeForDecorations sollte Decorations zurückgeben
+    ✔ showMetricsPanel sollte aufgerufen werden können
+    ✔ Lange Methoden sollten erkannt werden
+    ✔ Große Klassen sollten erkannt werden
+    ✔ Mehrere Klassen sollten analysiert werden
+    ✔ Leere Datei sollte behandelt werden
+    ✔ Parse Fehler sollten behandelt werden
+    ✔ Verschachtelte Klassen sollten behandelt werden
+    ✔ Methoden mit Parametern sollten analysiert werden
+    ✔ Komplexe Code-Metriken sollten berechnet werden
+    ✔ Sehr kleine Klasse (unter 50 LOC) sollte erkannt werden
+    ✔ Mittlere Datei (50-200 LOC) sollte korrekt kategorisiert werden
 
 
-  23 passing (6s)
+  29 passing (79ms)
 
------------------------------------|---------|----------|---------|---------|-----------------------
-File                               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s     
------------------------------------|---------|----------|---------|---------|-----------------------
-All files                          |   13.65 |    12.51 |   28.75 |   39.95 |                       
- refactorings                      |     100 |     90.9 |     100 |     100 |                       
-  extension.js                     |     100 |     90.9 |     100 |     100 | 59-66                 
- refactorings/coverage             |       0 |        0 |       0 |       0 |                       
-  block-navigation.js              |       0 |        0 |       0 |       0 | 2-87                  
-  prettify.js                      |       0 |        0 |       0 |       0 | 2                     
-  sorter.js                        |       0 |        0 |       0 |       0 | 2-210                 
- refactorings/coverage/lcov-report |       0 |        0 |       0 |       0 |                       
-  block-navigation.js              |       0 |        0 |       0 |       0 | 2-87                  
-  prettify.js                      |       0 |        0 |       0 |       0 | 2                     
-  sorter.js                        |       0 |        0 |       0 |       0 | 2-210                 
- refactorings/lib                  |   75.53 |    62.59 |   86.95 |   76.21 |                       
-  decorations.js                   |   97.56 |    78.57 |     100 |     100 | 66,90,106             
-  parser.js                        |   70.83 |    60.68 |   84.61 |      71 | ...34,154,271,609-661 
------------------------------------|---------|----------|---------|---------|-----------------------
+-----------------|---------|----------|---------|---------|-----------------------------------------
+File             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                       
+-----------------|---------|----------|---------|---------|-----------------------------------------
+All files        |   66.18 |    53.59 |   76.92 |   69.35 |                                         
+ src             |   92.85 |    86.36 |     100 |   92.85 |                                         
+  extension.js   |   92.85 |    86.36 |     100 |   92.85 | 38-39,60                                
+ src/lib         |   61.37 |    48.09 |   73.91 |   64.56 |                                         
+  decorations.js |   63.41 |    57.14 |   85.71 |   70.27 | 61-62,80-83,91-95                       
+  parser.js      |   60.93 |       47 |   71.79 |   63.31 | ...,154,236-241,251-252,262-273,609-661 
+-----------------|---------|----------|---------|---------|-----------------------------------------

@@ -1,0 +1,18 @@
+.vscode/**
+.vscode-test/**
+tests/**
+coverage/**
+node_modules/**/.bin/**
+.gitignore
+.yarnrc
+.eslintrc.json
+**/*.map
+**/.eslintrc.json
+*.vsix
+.nyc_output/**
+.git/**
+.DS_Store
+*.log
+
+# Keep these files
+!node_modules/java-parser/**
