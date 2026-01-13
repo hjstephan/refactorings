@@ -2,7 +2,7 @@
   "name": "java-refactoring-analyzer",
   "displayName": "Java Refactoring Analyzer",
   "description": "Analyzes Java code structure to maximize classes and minimize LOC/method with real-time decorations",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "publisher": "hjstephan86",
   "author": {
     "name": "Stephan Epp"
@@ -86,8 +86,8 @@
     "sinon": "^17.0.1"
   },
   "scripts": {
-    "test:unit": "mocha",
-    "test:coverage": "nyc mocha",
+    "test:unit": "mocha \"tests/**/*.test.js\"",
+    "test:coverage": "nyc mocha \"tests/**/*.test.js\"",
     "test": "npm run test:unit"
   },
   "nyc": {
@@ -97,7 +97,7 @@
       "lcov"
     ],
     "exclude": [
-      "test/**",
+      "tests/**",
       "node_modules/**"
     ],
     "all": true,

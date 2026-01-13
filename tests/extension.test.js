@@ -121,7 +121,7 @@ public class TestClass {
         vscodeStub.window.activeTextEditor = mockEditor;
 
         // Load extension with mocked VS Code
-        extension = proxyquire('../extension.js', {
+        extension = proxyquire('../src/extension.js', {
             'vscode': vscodeStub,
             'java-parser': require('java-parser')
         });
